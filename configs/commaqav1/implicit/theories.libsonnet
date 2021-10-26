@@ -23,7 +23,7 @@
         answer: "#3",
       },
       {
-        operation: "filterKeys(#3)",
+        operation: "filterKeys(#3)_keys",
         question: "is_smaller(#3 | #1)",
         answer: "#4",
       },
