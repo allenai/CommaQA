@@ -12,6 +12,8 @@ import _jsonnet
 from commaqa.configs.dataset_build_config import DatasetBuildConfig
 from commaqa.execution.utils import build_models
 
+logger = logging.getLogger(__name__)
+
 
 def parse_arguments():
     arg_parser = argparse.ArgumentParser(description='Build a CommaQA dataset from inputs')
@@ -40,14 +42,18 @@ class DatasetBuilder:
                       num_groups: int = 10, num_examples_per_group: int = 10):
         data = []
         numqs_per_theory = {}
+        logger.info("Creating examples with {} questions per group. #Groups: {}. "
+                    "#Entities per group: {}".format(num_examples_per_group, num_groups,
+                                                     num_entities_per_group))
         # Distribution over input configs to sample equal #examples from each config
         # Start with equal number (num_groups) and reduce by len(configs) each time
         # This will ensure that we get num_groups/len(configs) groups per config as well as
         # a peaky distribution that samples examples from rarely used configs
         config_distribution = [num_groups for x in self.configs]
         group_idx = 0
+        num_attempts = 0
         while group_idx < num_groups:
-
+            num_attempts += 1
             config_idx = random.choices(range(len(self.configs)), config_distribution)[0]
             current_config = self.configs[config_idx]
             # sample entities based on the current config
@@ -88,14 +94,14 @@ class DatasetBuilder:
             if len(all_questions) < num_examples_per_group:
                 # often happens when a configuration has only one theory, skip print statement
                 if len(current_config.theories) != 1:
-                    print("Insufficient examples: {} generated. Sizes:{} KB:\n{}".format(
+                    logger.warning("Insufficient examples: {} generated. Sizes:{} KB:\n{}".format(
                         len(all_questions),
                         [(tidx, len(final_questions)) for (tidx, final_questions) in
                          questions_per_theory.items()],
                         json.dumps(complete_kb, indent=2)
                     ))
-                print("Skipping config: {} Total #questions: {}".format(config_idx,
-                                                                        len(all_questions)))
+                logger.debug("Skipping config: {} Total #questions: {}".format(config_idx,
+                                                                               len(all_questions)))
                 continue
 
             # subsample questions to equalize #questions per theory
@@ -104,7 +110,7 @@ class DatasetBuilder:
             for qa_per_theory in questions_per_theory.values():
                 subsampled_questions.extend(random.sample(qa_per_theory, min_size))
             if len(subsampled_questions) < num_examples_per_group:
-                print("Skipping config: {} Sub-sampled questions: {}".format(
+                logger.warning("Skipping config: {} Sub-sampled questions: {}".format(
                     config_idx, len(subsampled_questions)))
                 continue
             final_questions = random.sample(subsampled_questions, num_examples_per_group)
@@ -114,9 +120,11 @@ class DatasetBuilder:
             group_idx += 1
             # update distribution over configs
             config_distribution[config_idx] -= len(self.configs)
-
+            if group_idx % 100 == 0:
+                logger.info("Created {} groups. Attempted: {}".format(group_idx,
+                                                                      num_attempts))
         for theory_key, numqs in numqs_per_theory.items():
-            print("Theory: <{}> \n NumQs: [{}]".format(theory_key, numqs))
+            logger.debug("Theory: <{}> \n NumQs: [{}]".format(theory_key, numqs))
         return data
 
 
@@ -126,6 +134,8 @@ if __name__ == '__main__':
     counter = 0
     if args.debug:
         logging.basicConfig(level=logging.DEBUG)
+    else:
+        logging.basicConfig(level=logging.INFO)
     for filename in args.input_json.split(","):
         counter += 1
         output_dir = ""
