@@ -9,11 +9,12 @@ from commaqa.models.generator import LMGenerator
 class LMGenParticipant(ParticipantModel):
 
     def __init__(self, scale_by_step=1, add_eos=False, add_prefix="", next_model="execute",
-                 **kwargs):
+                 end_state="[EOQ]", **kwargs):
         self.scale_by_step = scale_by_step
         self.add_eos = add_eos
         self.add_prefix = add_prefix
         self.next_model = next_model
+        self.end_state = end_state
         self.lmgen = LMGenerator(**kwargs)
 
     def query(self, state, debug=False):
@@ -50,23 +51,19 @@ class LMGenParticipant(ParticipantModel):
         output_seqs, output_scores = self.lmgen.generate_sequences(gen_seq)
         for output in list(set(output_seqs)):
             output = output.strip()
-            if self.model_type == "t5":
-                # T5 does not produce "<"!
-                m = re.match(".* ([^ <]+>) .*", output)
-                if m:
-                    output = output.replace(m.group(1), "<" + m.group(1))
             # copy state
             new_state = state.copy()
             ## add new question to question_seq
             new_state.data["question_seq"].append(output)
-            ## specify that in this case, the qa model should come next in this case
-            new_state.next = self.next_model
+            if output == self.end_state:
+                new_state.next = self.end_state
+            else:
+                new_state.next = self.next_model
             ## maniuplate score (e.g., add)
             # new_state._score += score
             new_state.data["command_seq"].append("gen")
             ## mark the last output
             new_state.last_output = output
-
             new_states.append(new_state)
         ##
         return new_states
