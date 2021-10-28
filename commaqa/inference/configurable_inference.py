@@ -2,6 +2,8 @@ import argparse
 import json
 import logging
 
+import _jsonnet
+
 from commaqa.inference.constants import MODEL_NAME_CLASS, READER_NAME_CLASS
 from commaqa.inference.dataset_readers import DatasetReader
 from commaqa.inference.model_search import (
@@ -49,8 +51,11 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.ERROR)
     args = parse_arguments()
 
-    with open(args.config, "r") as input_fp:
-        config_map = json.load(input_fp)
+    if args.config.endswith(".jsonnet"):
+        config_map = json.loads(_jsonnet.evaluate_file(args.config))
+    else:
+        with open(args.config, "r") as input_fp:
+            config_map = json.load(input_fp)
 
     decomposer, model_map = load_decomposer(config_map)
     reader: DatasetReader = READER_NAME_CLASS[args.reader]()
