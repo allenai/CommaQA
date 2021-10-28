@@ -1,7 +1,7 @@
 import itertools
 import re
 
-pred_match = re.compile("(.*)\((.*)\)")
+pred_match = re.compile("(.*)\((.*)\)$")
 
 
 def get_answer_indices(question_str):

@@ -94,3 +94,10 @@ class ModelExecutor:
                     return [], []
             else:
                 return self.kblookup.ask_question_predicate(question_predicate)
+        # No match found for predicate
+        error = "No matching predicate for {}".format(question_predicate)
+        if self.ignore_input_mismatch:
+            logger.debug(error)
+            return [], []
+        else:
+            raise ValueError(error)
