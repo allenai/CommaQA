@@ -2,3 +2,5 @@ jsonnet
 transformers==4.11.3
 protobuf==3.19.0
 torch==1.10.0
+# Only needed for DROP evaluation script
+scipy
