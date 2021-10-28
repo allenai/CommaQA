@@ -43,11 +43,12 @@ class OperationExecuter:
 
     def execute_project(self, operation, model, question, assignments):
         # print(question, assignments)
-        assert model in self.model_library, "Model: {} not found in model library!".format(
-            model)
+        assert model in self.model_library,\
+            "Model: {} not found in model library!".format(model)
         indices = get_answer_indices(question)
         if len(indices) > 1:
-            raise ValueError("PROJECT: Can not handle more than one answer idx: {} for project: {}".format(indices, question))
+            raise ValueError("PROJECT: Can not handle more than one answer idx: {} "
+                             "for project: {}".format(indices, question))
         if len(indices) == 0:
             raise ValueError("PROJECT: Did not find any indices to project on " + str(question))
         idx_str = "#" + str(indices[0])
@@ -58,13 +59,30 @@ class OperationExecuter:
         facts_used = []
         operation_seq = operation.split("_")
         first_op = operation_seq[0]
+        if not isinstance(assignments[idx_str], list):
+            raise ValueError("PROJECT: Can not perform project operation on a non-list input: {}"
+                             " Operation: {} Question: {}".format(assignments[idx_str],
+                                                                  operation, question))
         for item in assignments[idx_str]:
             # print(idx_str, item, assignments)
             if first_op == "projectValues":
+                # item should be a tuple
+                if not isinstance(item, tuple):
+                    raise ValueError("PROJECT: Item: {} is not a tuple in assignments: {}. "
+                                     "Expected for projectValues".format(item,
+                                                                         assignments[idx_str]))
                 new_question = question.replace(idx_str, json.dumps(item[1]))
             elif first_op == "projectKeys":
+                # item should be a tuple
+                if not isinstance(item, tuple):
+                    raise ValueError("PROJECT: Item: {} is not a tuple in assignments: {}. "
+                                     "Expected for projectKeys".format(item,
+                                                                       assignments[idx_str]))
                 new_question = question.replace(idx_str, json.dumps(item[0]))
             else:
+                if not isinstance(item, str):
+                    raise ValueError("PROJECT: Item: {} is not a string in assigments: {}. "
+                                     "Expected for project".format(item, assignments[idx_str]))
                 new_question = question.replace(idx_str, item)
             curr_answers, curr_facts = self.model_library[model].ask_question(new_question)
             facts_used.extend(curr_facts)
@@ -107,7 +125,8 @@ class OperationExecuter:
                              " No assignments yet!".format(idx_str))
         if not isinstance(assignments[idx_str], list):
             raise ValueError("FILTER: Can not perform filter operation on a non-list input: {}"
-                             " Operation: {} Question: {}".format(assignments[idx_str], operation, question))
+                             " Operation: {} Question: {}".format(assignments[idx_str],
+                                                                  operation, question))
         answers = []
         facts_used = []
         operation_seq = operation.split("_")
@@ -123,7 +142,8 @@ class OperationExecuter:
             elif first_op.startswith("filterValues"):
                 if not isinstance(item, tuple):
                     raise ValueError("FILTER: Item: {} is not a tuple in assignments: {}. "
-                                      "Expected for filterValues".format(item, assignments[idx_str]))
+                                      "Expected for filterValues".format(item,
+                                                                         assignments[idx_str]))
                 (key, value) = item
                 new_question = question.replace(idx_str, json.dumps(key))
             else:
@@ -156,7 +176,8 @@ class OperationExecuter:
                 return [], []
         except ValueError as e:
             if self.ignore_input_mismatch:
-                logger.debug("Can not execute operation: {} question: {} with assignments: {}".format(operation, question, assignments))
+                logger.debug("Can not execute operation: {} question: {} "
+                             "with assignments: {}".format(operation, question, assignments))
                 logger.debug(str(e))
                 return [], []
             else:
