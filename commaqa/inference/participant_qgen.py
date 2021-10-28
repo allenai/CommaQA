@@ -48,7 +48,7 @@ class LMGenParticipant(ParticipantModel):
         ## eventual output
         new_states = []
         ## go through generated questions
-        output_seqs, output_scores = self.lmgen.generate_sequences(gen_seq)
+        output_seqs, output_scores = self.lmgen.generate_text_sequence(gen_seq)
         for output in list(set(output_seqs)):
             output = output.strip()
             # copy state
