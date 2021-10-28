@@ -1,10 +1,13 @@
 import json
 import re
+import logging
 
 from commaqa.execution.operation_executer import OperationExecuter
 from commaqa.execution.utils import build_models
 from commaqa.inference.model_search import ParticipantModel
+from commaqa.configs.predicate_language_config import ModelQuestionConfig
 
+logger = logging.getLogger(__name__)
 
 class ExecutionRouter(ParticipantModel):
     def __init__(self, remodel_file, next_model="gen"):
@@ -22,7 +25,7 @@ class ExecutionRouter(ParticipantModel):
                 for qa_pair in input_item["qa_pairs"]:
                     qid = qa_pair["id"]
                     self.qid_to_kb_lang_idx[qid] = idx
-            self.operation_regex = re.compile("\[(.*)\] <(.*)> (.*)")
+            self.operation_regex = re.compile("\((.+)\) \[([^\]]+)\] (.*)")
 
     def query(self, state, debug=False):
         """The main function that interfaces with the overall search and
@@ -37,14 +40,20 @@ class ExecutionRouter(ParticipantModel):
         question = data["question_seq"][-1]
         qid = data["qid"]
         (kb, pred_lang) = self.kb_lang_groups[self.qid_to_kb_lang_idx[qid]]
-        model_lib = build_models(pred_lang, kb)
+        model_configurations = {}
+        for model_name, configs in pred_lang.items():
+            model_configurations[model_name] = [ModelQuestionConfig(config) for config in configs]
+        model_lib = build_models(model_configurations, kb, ignore_input_mismatch=True)
         ### run the model (as before)
         if debug: print("<OPERATION>: %s, qid=%s" % (question, qid))
         m = self.operation_regex.match(question)
+        if m is None:
+            logger.debug("No match for {}".format(question))
+            return []
         assignment = {}
         for ans_idx, ans in enumerate(data["answer_seq"]):
             assignment["#" + str(ans_idx + 1)] = json.loads(ans)
-        executer = OperationExecuter(model_library=model_lib)
+        executer = OperationExecuter(model_library=model_lib, ignore_input_mismatch=True)
         answers, facts_used = executer.execute_operation(operation=m.group(1),
                                                          model=m.group(2),
                                                          question=m.group(3),
@@ -58,7 +67,7 @@ class ExecutionRouter(ParticipantModel):
         new_state.data["answer_seq"].append(json.dumps(answers))
         new_state.data["para_seq"].append("")
         new_state.data["command_seq"].append("qa")
-
+        new_state.data["model_seq"].append(m.group(2))
         ## change output
         new_state.last_output = answers
         new_state.next = self.next_model

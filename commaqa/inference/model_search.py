@@ -193,6 +193,14 @@ class SearchState(object):
     def next(self):
         return self._next
 
+    @next.setter
+    def next(self, value):
+        self._next = value
+
+    @data.setter
+    def data(self, value):
+        self._data = value
+
     ## string method (especially for debugging)
     def __str__(self):
         return "[OUTPUT] val=%s [SCORE] %s" % (self._last_output,

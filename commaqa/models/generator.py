@@ -32,6 +32,6 @@ class LMGenerator:
 
         for generated_sequence_idx, generated_output in enumerate(generation_outputs):
             generated_output = generated_output.tolist()
-            text = self.tokenizer.decode(generated_output, self.decoder_args)
+            text = self.tokenizer.decode(generated_output, **self.decoder_args)
             generated_sequences.append(text)
         return generated_sequences
