@@ -1,6 +1,8 @@
 import argparse
 import json
 from copy import deepcopy
+from math import ceil
+from random import shuffle
 
 from commaqa.configs.predicate_language_config import ModelQuestionConfig
 from commaqa.execution.operation_executer import OperationExecuter
@@ -13,6 +15,9 @@ def parse_arguments():
                             help="Input JSON dataset files")
     arg_parser.add_argument('--pred_json', type=str, required=False, help="Output predictions")
     arg_parser.add_argument('--decomp_json', type=str, required=False, help="Output decompositions")
+    arg_parser.add_argument('--max_examples', type=float, required=False, default=1.0,
+                            help="Maximum number of examples to use. "
+                                 "If set to <=1.0, use as fraction.")
     return arg_parser.parse_args()
 
 
@@ -72,6 +77,14 @@ if __name__ == '__main__':
         with open(args.pred_json, "w") as output_fp:
             json.dump(pred_json, output_fp, indent=2)
     if args.decomp_json:
+        # sample examples here as they will be ungrouped
+        if args.max_examples < 1.0:
+            shuffle(decomp_json)
+            decomp_json = decomp_json[:ceil(len(decomp_json) * args.max_examples)]
+        elif args.max_examples > 1.0:
+            shuffle(decomp_json)
+            decomp_json = decomp_json[:args.max_examples]
+
         with open(args.decomp_json, "w") as output_fp:
             for decomp in decomp_json:
                 output_fp.write(json.dumps(decomp) + "\n")
