@@ -9,6 +9,7 @@ from commaqa.inference.dataset_readers import DatasetReader
 from commaqa.inference.model_search import (
     ModelController,
     BestFirstDecomposer, QuestionGeneratorData)
+from commaqa.inference.utils import get_environment_variables
 
 
 def parse_arguments():
@@ -52,7 +53,8 @@ if __name__ == "__main__":
     args = parse_arguments()
 
     if args.config.endswith(".jsonnet"):
-        config_map = json.loads(_jsonnet.evaluate_file(args.config))
+        ext_vars = get_environment_variables()
+        config_map = json.loads(_jsonnet.evaluate_file(args.config, ext_vars=ext_vars))
     else:
         with open(args.config, "r") as input_fp:
             config_map = json.load(input_fp)
