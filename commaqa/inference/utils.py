@@ -1,6 +1,11 @@
 from typing import List
 
-from commaqa.inference.constants import COMPQ_MARKER, INTERQ_MARKER, ANSWER_MARKER, SIMPQ_MARKER
+QUESTION_MARKER = " Q: "
+COMPQ_MARKER = " QC: "
+SIMPQ_MARKER = " QS: "
+INTERQ_MARKER = " QI: "
+ANSWER_MARKER = " A: "
+LIST_JOINER = " + "
 
 
 def get_sequence_representation(origq: str, question_seq: List[str], answer_seq: List[str],

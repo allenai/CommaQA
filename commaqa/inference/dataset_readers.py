@@ -1,6 +1,5 @@
 import json
 
-from commaqa.inference.constants import LIST_JOINER
 
 
 class DatasetReader:
@@ -29,15 +28,15 @@ class HotpotQAReader(DatasetReader):
 
 def format_drop_answer(answer_json):
     if answer_json["number"]:
-        return answer_json["number"], -1
+        return answer_json["number"]
     if len(answer_json["spans"]):
-        return LIST_JOINER.join(answer_json["spans"]), -1
+        return answer_json["spans"]
     # only date possible
     date_json = answer_json["date"]
     if not (date_json["day"] or date_json["month"] or date_json["year"]):
         print("Number, Span or Date not set in {}".format(answer_json))
-        return None, -1
-    return date_json["day"] + "-" + date_json["month"] + "-" + date_json["year"], -1
+        return None
+    return date_json["day"] + "-" + date_json["month"] + "-" + date_json["year"]
 
 
 class DropReader(DatasetReader):
@@ -51,7 +50,7 @@ class DropReader(DatasetReader):
             for qa_pair in item["qa_pairs"]:
                 question = qa_pair["question"]
                 qid = qa_pair["query_id"]
-                answer, _ = format_drop_answer(qa_pair["answer"])
+                answer = format_drop_answer(qa_pair["answer"])
                 yield {
                     "qid": qid,
                     "query": question,
