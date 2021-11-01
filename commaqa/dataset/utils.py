@@ -54,7 +54,7 @@ def align_assignments(target_predicate, source_predicate, source_assignments):
     target_assignment_map = {}
     for target_arg, source_arg in zip(target_args, source_args):
         if source_arg == "?":
-            if target_args != "?":
+            if target_arg != "?":
                 raise ValueError("Source ({}) and Target ({}) predicates have mismatch"
                                  " on '?'".format(source_predicate, target_predicate))
             continue
