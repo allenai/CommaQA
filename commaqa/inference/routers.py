@@ -1,13 +1,14 @@
 import json
-import re
 import logging
+import re
 
+from commaqa.configs.predicate_language_config import ModelQuestionConfig
 from commaqa.execution.operation_executer import OperationExecuter
 from commaqa.execution.utils import build_models
 from commaqa.inference.model_search import ParticipantModel
-from commaqa.configs.predicate_language_config import ModelQuestionConfig
 
 logger = logging.getLogger(__name__)
+
 
 class ExecutionRouter(ParticipantModel):
     def __init__(self, remodel_file, next_model="gen"):

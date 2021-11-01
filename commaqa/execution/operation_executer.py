@@ -1,10 +1,10 @@
 import json
 import logging
 
-from commaqa.dataset.utils import flatten_list, get_predicate_args, get_answer_indices
-
+from commaqa.dataset.utils import flatten_list, get_answer_indices
 
 logger = logging.getLogger(__name__)
+
 
 class OperationExecuter:
 
@@ -28,8 +28,6 @@ class OperationExecuter:
         return answers
 
     def execute_select(self, operation, model, question, assignments):
-        assert model in self.model_library, "Model: {} not found in model library!".format(
-            model)
         indices = get_answer_indices(question)
         for index in indices:
             idx_str = "#" + str(index)
@@ -42,9 +40,6 @@ class OperationExecuter:
         return answers, facts_used
 
     def execute_project(self, operation, model, question, assignments):
-        # print(question, assignments)
-        assert model in self.model_library,\
-            "Model: {} not found in model library!".format(model)
         indices = get_answer_indices(question)
         if len(indices) > 1:
             raise ValueError("PROJECT: Can not handle more than one answer idx: {} "
@@ -98,8 +93,6 @@ class OperationExecuter:
         return answers, facts_used
 
     def execute_filter(self, operation, model, question, assignments):
-        assert model in self.model_library, "Model: {} not found in model library!".format(
-            model)
         indices = get_answer_indices(question)
         if len(indices) > 1:
             # check which index is mentioned in the operation
@@ -114,8 +107,9 @@ class OperationExecuter:
                     if idx not in indices:
                         idx_str = "#" + str(idx)
                         if idx_str not in assignments:
-                            raise ValueError("FILTER: Can not perform filter operation with input arg: {} "
-                                             "No assignments yet!".format(idx_str))
+                            raise ValueError(
+                                "FILTER: Can not perform filter operation with input arg: {} "
+                                "No assignments yet!".format(idx_str))
                         # print(question, idx_str, assignments)
                         question = question.replace(idx_str, json.dumps(assignments[idx_str]))
 
@@ -142,8 +136,8 @@ class OperationExecuter:
             elif first_op.startswith("filterValues"):
                 if not isinstance(item, tuple):
                     raise ValueError("FILTER: Item: {} is not a tuple in assignments: {}. "
-                                      "Expected for filterValues".format(item,
-                                                                         assignments[idx_str]))
+                                     "Expected for filterValues".format(item,
+                                                                        assignments[idx_str]))
                 (key, value) = item
                 new_question = question.replace(idx_str, json.dumps(key))
             else:
@@ -164,6 +158,14 @@ class OperationExecuter:
         return answers, facts_used
 
     def execute_operation(self, operation, model, question, assignments):
+        if model not in self.model_library:
+            error_mesg = "Model: {} not found in " \
+                         "model_library: {}".format(model, self.model_library.keys())
+            if self.ignore_input_mismatch:
+                raise ValueError(error_mesg)
+            else:
+                logger.debug(error_mesg)
+                return [], []
         try:
             if operation.startswith("select"):
                 return self.execute_select(operation, model, question, assignments)
@@ -172,7 +174,8 @@ class OperationExecuter:
             elif operation.startswith("filter"):
                 return self.execute_filter(operation, model, question, assignments)
             else:
-                logger.debug("Can not execute operation: {}. Returning empty list".format(operation))
+                logger.debug(
+                    "Can not execute operation: {}. Returning empty list".format(operation))
                 return [], []
         except ValueError as e:
             if self.ignore_input_mismatch:

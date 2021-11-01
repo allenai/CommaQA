@@ -42,14 +42,21 @@ def align_assignments(target_predicate, source_predicate, source_assignments):
     """
     target_pred, target_args = get_predicate_args(target_predicate)
     source_pred, source_args = get_predicate_args(source_predicate)
-    assert target_pred == source_pred, "Predicates should match for alignment"
-    assert len(target_args) == len(source_args), "Number of arguments should match for alignment"
+    if target_pred != source_pred:
+        raise ValueError("Source predicate: {} does not match target predicate: {}".format(
+            source_predicate, target_predicate
+        ))
+    if len(target_args) != len(source_args):
+        raise ValueError("Number of target arguments: {} don't match source arguments: {}".format(
+            target_args, source_args
+        ))
     target_assignment = {}
     target_assignment_map = {}
     for target_arg, source_arg in zip(target_args, source_args):
         if source_arg == "?":
-            assert target_arg == "?", "Source ({}) and Target ({}) predicates have mismatch" \
-                                      " on '?'".format(source_predicate, target_predicate)
+            if target_args != "?":
+                raise ValueError("Source ({}) and Target ({}) predicates have mismatch"
+                                 " on '?'".format(source_predicate, target_predicate))
             continue
         if source_arg not in source_assignments:
             raise ValueError("No assignment for {} in input assignments: {}".format(
