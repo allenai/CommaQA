@@ -62,6 +62,8 @@ class OperationExecuter:
                                                                   operation, question))
         for item in assignments[idx_str]:
             # print(idx_str, item, assignments)
+            if isinstance(item, list) and len(item) == 2:
+                item = tuple(item)
             if first_op == "projectValues":
                 # item should be a tuple
                 if not isinstance(item, tuple):
@@ -130,6 +132,8 @@ class OperationExecuter:
         operation_seq = operation.split("_")
         first_op = operation_seq[0]
         for item in assignments[idx_str]:
+            if isinstance(item, list) and len(item) == 2:
+                item = tuple(item)
             if first_op.startswith("filterKeys"):
                 # item should be a tuple
                 if not isinstance(item, tuple):
