@@ -51,7 +51,8 @@ def load_decomposer(config_map):
 if __name__ == "__main__":
     logging.basicConfig(level=logging.ERROR)
     args = parse_arguments()
-
+    if args.debug:
+        logging.basicConfig(level=logging.DEBUG)
     if args.config.endswith(".jsonnet"):
         ext_vars = get_environment_variables()
         config_map = json.loads(_jsonnet.evaluate_file(args.config, ext_vars=ext_vars))

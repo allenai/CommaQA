@@ -76,6 +76,4 @@ def valid_answer(answer):
         return False
     if isinstance(answer, str) and answer == "":
         return False
-    if isinstance(answer, float) and answer == 0.0:
-        return False
     return True

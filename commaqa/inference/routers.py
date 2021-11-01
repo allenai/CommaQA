@@ -3,6 +3,7 @@ import logging
 import re
 
 from commaqa.configs.predicate_language_config import ModelQuestionConfig
+from commaqa.dataset.utils import valid_answer
 from commaqa.execution.operation_executer import OperationExecuter
 from commaqa.execution.utils import build_models
 from commaqa.inference.model_search import ParticipantModel
@@ -59,7 +60,7 @@ class ExecutionRouter(ParticipantModel):
                                                          model=m.group(2),
                                                          question=m.group(3),
                                                          assignments=assignment)
-        if isinstance(answers, list) and len(answers) == 0:
+        if not valid_answer(answers):
             return []
         # copy state
         new_state = state.copy()

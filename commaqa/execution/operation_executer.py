@@ -1,7 +1,7 @@
 import json
 import logging
 
-from commaqa.dataset.utils import flatten_list, get_answer_indices
+from commaqa.dataset.utils import flatten_list, get_answer_indices, valid_answer
 
 logger = logging.getLogger(__name__)
 
@@ -36,6 +36,8 @@ class OperationExecuter:
                                  " No assignments yet!".format(idx_str))
             question = question.replace(idx_str, json.dumps(assignments[idx_str]))
         answers, facts_used = self.model_library[model].ask_question(question)
+        if not valid_answer(answers):
+            return [], []
         answers = self.execute_sub_operations(answers, operation)
         return answers, facts_used
 
@@ -80,6 +82,8 @@ class OperationExecuter:
                                      "Expected for project".format(item, assignments[idx_str]))
                 new_question = question.replace(idx_str, item)
             curr_answers, curr_facts = self.model_library[model].ask_question(new_question)
+            if not valid_answer(curr_answers):
+                return [], []
             facts_used.extend(curr_facts)
 
             if first_op == "projectValues":
@@ -147,6 +151,8 @@ class OperationExecuter:
                 new_question = question.replace(idx_str, item)
 
             answer, curr_facts = self.model_library[model].ask_question(new_question)
+            if not valid_answer(answer):
+                return [], []
             if not isinstance(answer, str):
                 raise ValueError("FILTER: Incorrect question type for filter. Returned answer: {}"
                                  " for question: {}".format(answer, new_question))
