@@ -171,7 +171,7 @@ class OperationExecuter:
         if model not in self.model_library:
             error_mesg = "Model: {} not found in " \
                          "model_library: {}".format(model, self.model_library.keys())
-            if self.ignore_input_mismatch:
+            if not self.ignore_input_mismatch:
                 raise ValueError(error_mesg)
             else:
                 logger.debug(error_mesg)
