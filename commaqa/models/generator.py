@@ -1,5 +1,9 @@
 import torch
 from transformers import AutoConfig, AutoTokenizer, AutoModelWithLMHead
+from transformers.generation_utils import SampleEncoderDecoderOutput
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class LMGenerator:
@@ -33,7 +37,11 @@ class LMGenerator:
         generated_dict = self.model.generate(input_ids=encoded_prompt, **self.generation_args)
 
         generated_seqs = generated_dict.sequences
-        generated_scores = generated_dict.sequences_scores
+        if isinstance(generated_dict, SampleEncoderDecoderOutput):
+            logger.warning("No scores generated when sampled sequences")
+            generated_scores = [0] * len(generated_seqs)
+        else:
+            generated_scores = generated_dict.sequences_scores.tolist()
         if len(generated_seqs.shape) > 2:
             generated_seqs.squeeze_()
 
