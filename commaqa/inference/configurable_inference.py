@@ -11,6 +11,7 @@ from commaqa.inference.model_search import (
     BestFirstDecomposer, QuestionGeneratorData)
 from commaqa.inference.utils import get_environment_variables
 
+logger = logging.getLogger(__name__)
 
 def parse_arguments():
     arg_parser = argparse.ArgumentParser(description='Convert HotPotQA dataset into SQUAD format')
@@ -57,6 +58,7 @@ if __name__ == "__main__":
         logging.basicConfig(level=logging.ERROR)
     if args.config.endswith(".jsonnet"):
         ext_vars = get_environment_variables()
+        logger.info("Parsing config with external variables: {}".format(ext_vars))
         config_map = json.loads(_jsonnet.evaluate_file(args.config, ext_vars=ext_vars))
     else:
         with open(args.config, "r") as input_fp:
