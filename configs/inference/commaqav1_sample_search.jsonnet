@@ -26,7 +26,7 @@
     },
     "execute": {
       "name": "operation_executer",
-      "remodel_file": std.extVar(remodel_path) + "/" + std.extVar("filename"),
+      "remodel_file": std.extVar("remodel_path") + "/" + std.extVar("filename"),
       "next_model": "gen"
     }
   }
