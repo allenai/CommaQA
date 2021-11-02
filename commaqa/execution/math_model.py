@@ -58,13 +58,13 @@ class MathModel(ModelExecutor):
                     if num is None:
                         if self.ignore_input_mismatch:
                             logger.debug("Cannot parse as number: {}".format(x))
-                            return "", []
+                            return None, []
                         else:
                             raise ValueError("Cannot parse as number: {} in {}".format(x, entity))
                     numbers.append(num)
             else:
                 logger.debug("max can only handle list of entities. Arg: " + str(entity))
-                return "", []
+                return None, []
         except JSONDecodeError:
             logger.error("Could not parse: {}".format(groups[0]))
             raise
@@ -83,17 +83,17 @@ class MathModel(ModelExecutor):
                     if num is None:
                         if self.ignore_input_mismatch:
                             logger.debug("Cannot parse as number: {}".format(x))
-                            return "", []
+                            return None, []
                         else:
                             raise ValueError("Cannot parse as number: {} in {}".format(x, entity))
                     numbers.append(num)
             else:
                 logger.debug("min can only handle list of entities. Arg: " + str(entity))
-                return "", []
+                return None, []
         except JSONDecodeError:
             logger.debug("Could not parse: {}".format(groups[0]))
             if self.ignore_input_mismatch:
-                return "", []
+                return None, []
             else:
                 raise
         return min(numbers), []
@@ -108,11 +108,11 @@ class MathModel(ModelExecutor):
                 return len(entity), []
             else:
                 logger.debug("count can only handle list of entities. Arg: " + str(entity))
-                return "", []
+                return None, []
         except JSONDecodeError:
             logger.debug("Could not parse: {}".format(groups[0]))
             if self.ignore_input_mismatch:
-                return "", []
+                return None, []
             else:
                 raise
 
@@ -126,7 +126,7 @@ class MathModel(ModelExecutor):
                 if len(entity) > 1:
                     logger.debug(
                         "belongs_to can only handle single entity as 1st arg. Args:" + str(groups))
-                    return "", []
+                    return None, []
                 else:
                     entity = entity[0]
         except JSONDecodeError:
@@ -139,7 +139,7 @@ class MathModel(ModelExecutor):
 
         if not isinstance(ent_list, list):
             logger.debug("belongs_to can only handle lists as 2nd arg. Args:" + str(groups))
-            return "", []
+            return None, []
         if entity in ent_list:
             return "yes", []
         else:
@@ -154,7 +154,7 @@ class MathModel(ModelExecutor):
         if num1 is None or num2 is None:
             if self.ignore_input_mismatch:
                 # can not compare with Nones
-                return "", []
+                return None, []
             else:
                 raise ValueError("Cannot answer diff with {}".format(groups))
         if num2 > num1:
@@ -171,7 +171,7 @@ class MathModel(ModelExecutor):
         if num1 is None or num2 is None:
             if self.ignore_input_mismatch:
                 # can not compare with Nones
-                return "", []
+                return None, []
             else:
                 raise ValueError("Cannot answer gt with {}".format(groups))
         if num1 > num2:
@@ -188,7 +188,7 @@ class MathModel(ModelExecutor):
         if num1 is None or num2 is None:
             if self.ignore_input_mismatch:
                 # can not compare with Nones
-                return "", []
+                return None, []
             else:
                 raise ValueError("Cannot answer lt with {}".format(groups))
         if num1 < num2:

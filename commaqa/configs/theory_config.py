@@ -6,7 +6,7 @@ from typing import Dict, List
 
 from commaqa.configs.step_config import StepConfig
 from commaqa.configs.utils import execute_steps
-from commaqa.dataset.utils import dict_product, align_assignments, valid_answer, is_question_var
+from commaqa.dataset.utils import dict_product, align_assignments, nonempty_answer, is_question_var
 from commaqa.execution.model_executer import ModelExecutor
 from commaqa.execution.operation_executer import OperationExecuter
 
@@ -46,7 +46,7 @@ class TheoryConfig:
             new_assignment = execute_steps(steps=self.steps, input_assignments=curr_assignment,
                                            executer=op_executor, pred_lang_config=pred_lang_config,
                                            input_model=None)
-            if new_assignment is not None:
+            if new_assignment:
                 output_assignments.append(new_assignment)
 
         if len(output_assignments) < 2:
@@ -111,7 +111,7 @@ class TheoryConfig:
                                  "final answer!.\n Decomposition:{} \n Question: {} \n Answer: {}"
                                  "".format(decomposition, question, answer))
             # ignore questions with no valid answers
-            if not valid_answer(answer):
+            if not nonempty_answer(answer):
                 continue
             # ignore questions with too many answers
             if isinstance(answer, list) and len(answer) > 5:

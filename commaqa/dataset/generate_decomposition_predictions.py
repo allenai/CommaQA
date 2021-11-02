@@ -5,6 +5,7 @@ from math import ceil
 from random import shuffle
 
 from commaqa.configs.predicate_language_config import ModelQuestionConfig
+from commaqa.dataset.utils import nonempty_answer
 from commaqa.execution.operation_executer import OperationExecuter
 from commaqa.execution.utils import build_models
 
@@ -58,7 +59,7 @@ if __name__ == '__main__':
                                                                  question=step["q"],
                                                                  assignments=curr_assignment)
                 last_answer = answers
-                if isinstance(answers, list) and len(answers) == 0:
+                if not nonempty_answer(answers):
                     print("no answer!")
                     print(step, curr_assignment, kb)
                     break

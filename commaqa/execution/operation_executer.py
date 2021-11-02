@@ -1,7 +1,8 @@
 import json
 import logging
 
-from commaqa.dataset.utils import flatten_list, get_answer_indices, valid_answer
+from commaqa.dataset.utils import flatten_list, get_answer_indices, nonempty_answer, NOANSWER, \
+    valid_answer
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +38,7 @@ class OperationExecuter:
             question = question.replace(idx_str, json.dumps(assignments[idx_str]))
         answers, facts_used = self.model_library[model].ask_question(question)
         if not valid_answer(answers):
-            return [], []
+            return NOANSWER, []
         answers = self.execute_sub_operations(answers, operation)
         return answers, facts_used
 
@@ -85,7 +86,7 @@ class OperationExecuter:
                 new_question = question.replace(idx_str, item)
             curr_answers, curr_facts = self.model_library[model].ask_question(new_question)
             if not valid_answer(curr_answers):
-                return [], []
+                return NOANSWER, []
             facts_used.extend(curr_facts)
 
             if first_op == "projectValues":
@@ -156,7 +157,7 @@ class OperationExecuter:
 
             answer, curr_facts = self.model_library[model].ask_question(new_question)
             if not valid_answer(answer):
-                return [], []
+                return NOANSWER, []
             if not isinstance(answer, str):
                 raise ValueError("FILTER: Incorrect question type for filter. Returned answer: {}"
                                  " for question: {}".format(answer, new_question))
@@ -175,7 +176,7 @@ class OperationExecuter:
                 raise ValueError(error_mesg)
             else:
                 logger.debug(error_mesg)
-                return [], []
+                return NOANSWER, []
         try:
             if operation.startswith("select"):
                 return self.execute_select(operation, model, question, assignments)
@@ -186,12 +187,12 @@ class OperationExecuter:
             else:
                 logger.debug(
                     "Can not execute operation: {}. Returning empty list".format(operation))
-                return [], []
+                return NOANSWER, []
         except ValueError as e:
             if self.ignore_input_mismatch:
                 logger.debug("Can not execute operation: {} question: {} "
                              "with assignments: {}".format(operation, question, assignments))
                 logger.debug(str(e))
-                return [], []
+                return NOANSWER, []
             else:
                 raise e

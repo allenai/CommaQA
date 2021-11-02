@@ -4,7 +4,7 @@ from typing import List, Dict
 
 from commaqa.configs.predicate_language_config import PredicateLanguageConfig
 from commaqa.configs.step_config import StepConfig
-from commaqa.dataset.utils import is_question_var, valid_answer
+from commaqa.dataset.utils import is_question_var, nonempty_answer
 from commaqa.execution.operation_executer import OperationExecuter
 
 logger = logging.getLogger(__name__)
@@ -34,12 +34,15 @@ def execute_steps(steps: List[StepConfig], input_assignments: Dict[str, str],
                                                          model=model,
                                                          question=new_question,
                                                          assignments=curr_assignment)
-        if valid_answer(answers):
+        if answers is None:
+            # execution failed
+            return None
+        elif nonempty_answer(answers):
             curr_assignment[step.answer] = answers
             curr_assignment["facts_used"].extend(curr_facts)
         else:
-            logger.debug("Stopped Execution. Not a valid answer: {}\n"
+            logger.debug("Stopped Execution. Empty answer: {}\n"
                          "Question: {}\n Step: {}\n Assignment: {}".format(
                 answers, new_question, step.to_json(), curr_assignment))
-            return None
+            return {}
     return curr_assignment

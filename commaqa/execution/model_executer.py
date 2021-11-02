@@ -2,8 +2,8 @@ import logging
 import re
 
 from commaqa.configs.utils import execute_steps
-from commaqa.dataset.utils import get_predicate_args, align_assignments, valid_answer, \
-    get_question_indices
+from commaqa.dataset.utils import get_predicate_args, align_assignments, get_question_indices, \
+    valid_answer, NOANSWER
 from commaqa.execution.constants import KBLOOKUP_MODEL
 from commaqa.execution.operation_executer import OperationExecuter
 
@@ -53,17 +53,17 @@ class ModelExecutor:
                             # if this is valid answer, return it
                             return answers, facts_used
 
-            if answers is not None:
-                # some match found for the question but no valid answer.
-                # Return the last matching answer.
-                return answers, facts_used
-            elif not self.ignore_input_mismatch:
+            # if answers is not None:
+            #     # some match found for the question but no valid answer.
+            #     # Return the last matching answer.
+            #     return answers, facts_used
+            if not self.ignore_input_mismatch:
                 raise ValueError("No matching question found for {} "
                                  "in pred_lang:\n{}".format(input_question,
                                                             self.predicate_language))
             else:
-                # no matching question. return empty
-                return [], []
+                # no matching question. return NOANSWER
+                return NOANSWER, []
 
     def ask_question_predicate(self, question_predicate):
         qpred, qargs = get_predicate_args(question_predicate)
@@ -89,6 +89,9 @@ class ModelExecutor:
                 if assignments:
                     last_answer = pred_lang.steps[-1].answer
                     return assignments[last_answer], assignments["facts_used"]
+                elif assignments is None:
+                    # execution failed, try next predicate
+                    continue
                 else:
                     logger.debug("No answer found for question: {}".format(question_predicate))
                     return [], []
@@ -98,6 +101,6 @@ class ModelExecutor:
         error = "No matching predicate for {}".format(question_predicate)
         if self.ignore_input_mismatch:
             logger.debug(error)
-            return [], []
+            return NOANSWER, []
         else:
             raise ValueError(error)

@@ -71,9 +71,16 @@ def dict_product(dicts):
     return (dict(zip(dicts, x)) for x in itertools.product(*dicts.values()))
 
 
-def valid_answer(answer):
+def nonempty_answer(answer):
     if isinstance(answer, list) and len(answer) == 0:
         return False
     if isinstance(answer, str) and answer == "":
         return False
     return True
+
+
+NOANSWER = None
+
+
+def valid_answer(answer):
+    return answer is not None
