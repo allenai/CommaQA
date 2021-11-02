@@ -68,6 +68,7 @@ class LMGenParticipant(ParticipantModel):
                                "+ve to ensure monotonically increasing scores as expected by the" \
                                " search.".format(score)
             new_state._score += score
+            new_state.data["score_seq"].append(score)
             new_state.data["command_seq"].append("gen")
             ## mark the last output
             new_state.last_output = output
