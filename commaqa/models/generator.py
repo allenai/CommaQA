@@ -16,22 +16,34 @@ class LMGenerator:
         self.model = AutoModelWithLMHead.from_pretrained(model_path, config=self.config).to(
             self.device)
         self.generation_args = generation_args
+        # always generate output with scores
+        self.generation_args["output_scores"] = True
+        self.generation_args["return_dict_in_generate"] = True
         self.encoder_args = encoder_args
         self.decoder_args = decoder_args
 
     def generate_text_sequence(self, input_text):
+        """
+        :param input_text:
+        :return: returns a sequence of tuples (string, score) where lower score is better
+        """
         encoded_prompt = self.tokenizer.encode(input_text, **self.encoder_args)
 
         encoded_prompt = encoded_prompt.to(self.device)
-        generation_outputs = self.model.generate(input_ids=encoded_prompt, **self.generation_args)
+        generated_dict = self.model.generate(input_ids=encoded_prompt, **self.generation_args)
 
-        if len(generation_outputs.shape) > 2:
-            generation_outputs.squeeze_()
+        generated_seqs = generated_dict.sequences
+        generated_scores = generated_dict.sequences_scores
+        if len(generated_seqs.shape) > 2:
+            generated_seqs.squeeze_()
 
-        generated_sequences = []
+        output_seq_score = []
 
-        for generated_sequence_idx, generated_output in enumerate(generation_outputs):
-            generated_output = generated_output.tolist()
+        for generated_sequence_idx, generated_seq in enumerate(generated_seqs):
+            generated_output = generated_seq.tolist()
             text = self.tokenizer.decode(generated_output, **self.decoder_args)
-            generated_sequences.append(text)
-        return generated_sequences
+            # flip the negative logit so that sequence with lowest scores is best
+            output_seq_score.append((text, -generated_scores[generated_sequence_idx]))
+
+        # Ensure sorted output
+        return sorted(output_seq_score, key=lambda x: x[1])

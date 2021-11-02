@@ -1,6 +1,3 @@
-import re
-from math import ceil
-
 from commaqa.inference.model_search import ParticipantModel
 from commaqa.inference.utils import get_sequence_representation
 from commaqa.models.generator import LMGenerator
@@ -48,9 +45,16 @@ class LMGenParticipant(ParticipantModel):
         ## eventual output
         new_states = []
         ## go through generated questions
-        output_seqs = self.lmgen.generate_text_sequence(gen_seq)
-        for output in list(set(output_seqs)):
-            output = output.strip()
+        output_seq_scores = self.lmgen.generate_text_sequence(gen_seq)
+
+        observed_outputs = set()
+        for (output_seq, score) in output_seq_scores:
+            output = output_seq.strip()
+            # catch potentially spurious duplicates
+            if output in observed_outputs:
+                continue
+            else:
+                observed_outputs.add(output)
             # copy state
             new_state = state.copy()
             ## add new question to question_seq
@@ -59,8 +63,11 @@ class LMGenParticipant(ParticipantModel):
                 new_state.next = self.end_state
             else:
                 new_state.next = self.next_model
-            ## maniuplate score (e.g., add)
-            # new_state._score += score
+            # lower is better, same as the scores returned by generate_text_sequence
+            assert score >= 0, "Score from generation assumed to be +ve. Got: {}! Needs to be " \
+                               "+ve to ensure monotonically increasing scores as expected by the" \
+                               " search.".format(score)
+            new_state._score += score
             new_state.data["command_seq"].append("gen")
             ## mark the last output
             new_state.last_output = output
