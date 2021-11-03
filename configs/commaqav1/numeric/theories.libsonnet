@@ -134,7 +134,7 @@
         answer: "#3",
       },
       {
-        operation: "filterKeys(#3)_keys",
+        operation: "filterValues_keys",
         question: "is_greater(#3 | $1)",
         answer: "#4",
       },
@@ -164,7 +164,7 @@
         answer: "#3",
       },
       {
-        operation: "filterKeys(#3)_keys",
+        operation: "filterValues_keys",
         question: "is_smaller(#3 | $1)",
         answer: "#4",
       },
@@ -189,7 +189,7 @@
         answer: "#2",
       },
       {
-        operation: "filter(#2)",
+        operation: "filter",
         question: "is_smaller(#2 | $1)",
         answer: "#3",
       },
