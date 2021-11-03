@@ -1,3 +1,6 @@
+import random
+from itertools import product
+
 from commaqa.inference.model_search import ParticipantModel
 from commaqa.inference.utils import get_sequence_representation
 from commaqa.models.generator import LMGenerator
@@ -32,8 +35,11 @@ class LMGenParticipant(ParticipantModel):
         question_seq = data["question_seq"]
         answer_seq = data["answer_seq"]
         model_seq = data["model_seq"]
+        operation_seq = data["operation_seq"]
         gen_seq = get_sequence_representation(origq=data["query"], question_seq=question_seq,
-                                              answer_seq=answer_seq, model_seq=model_seq,
+                                              answer_seq=answer_seq,
+                                              # model_seq=model_seq,
+                                              # operation_seq=operation_seq,
                                               for_generation=True)
         if self.add_prefix:
             gen_seq = self.add_prefix + gen_seq
@@ -74,4 +80,75 @@ class LMGenParticipant(ParticipantModel):
             new_state.last_output = output
             new_states.append(new_state)
         ##
+        return new_states
+
+
+class RandomGenParticipant(ParticipantModel):
+
+    def __init__(self, operations_file, model_questions_file, sample_operations, sample_questions,
+                 next_model="execute", end_state="[EOQ]"):
+        self.operations = self.load_operations(operations_file)
+        self.model_questions = self.load_model_questions(model_questions_file)
+        self.sample_operations = sample_operations
+        self.sample_questions = sample_questions
+        self.end_state = end_state
+        self.next_model = next_model
+
+    def load_operations(self, operations_file):
+        with open(operations_file, "r") as input_fp:
+            ops = [x.strip() for x in input_fp.readlines()]
+        return ops
+
+    def load_model_questions(self, model_questions_file):
+        model_questions = []
+        with open(model_questions_file, "r") as input_fp:
+            for line in input_fp:
+                fields = line.strip().split("\t")
+                model_questions.append((fields[0], fields[1]))
+        return model_questions
+
+    def sample(self, population, sample_size_or_prop):
+        if sample_size_or_prop >= 1:
+            return random.sample(population, k=sample_size_or_prop)
+        else:
+            return random.sample(population, k=sample_size_or_prop * len(population))
+
+    def build_end_state(self, state):
+        new_state = state.copy()
+        output = self.end_state
+        new_state.data["question_seq"].append(output)
+        new_state.next = self.end_state
+        new_state.data["score_seq"].append(0)
+        new_state.data["command_seq"].append("gen")
+        ## mark the last output
+        new_state.last_output = output
+        return new_state
+
+    def query(self, state, debug=False):
+        data = state.data
+        if len(data["question_seq"]) > 5:
+            return [self.build_end_state(state)]
+
+        ops = self.sample(self.operations, self.sample_operations)
+        model_questions = self.sample(self.model_questions, self.sample_questions)
+        op_model_qs_prod = product(ops, model_questions)
+        ## eventual output
+        new_states = []
+        for (op, model_qs) in op_model_qs_prod:
+            (model, question) = model_qs
+            # copy state
+            new_state = state.copy()
+            output = "({}) [{}] {}".format(op, model, question)
+
+            ## add new question to question_seq
+            new_state.data["question_seq"].append(output)
+            new_state.next = self.next_model
+            new_state.data["score_seq"].append(0)
+            new_state.data["command_seq"].append("gen")
+            ## mark the last output
+            new_state.last_output = output
+            new_states.append(new_state)
+        ##
+        # if len(data["question_seq"]) > 0:
+        #     new_states.append(self.build_end_state(state))
         return new_states

@@ -3,7 +3,7 @@ import logging
 import re
 
 from commaqa.configs.predicate_language_config import ModelQuestionConfig
-from commaqa.dataset.utils import valid_answer
+from commaqa.dataset.utils import valid_answer, nonempty_answer
 from commaqa.execution.operation_executer import OperationExecuter
 from commaqa.execution.utils import build_models
 from commaqa.inference.model_search import ParticipantModel
@@ -11,9 +11,10 @@ from commaqa.inference.model_search import ParticipantModel
 logger = logging.getLogger(__name__)
 
 
-class ExecutionRouter(ParticipantModel):
-    def __init__(self, remodel_file, next_model="gen"):
+class ExecutionParticipant(ParticipantModel):
+    def __init__(self, remodel_file, next_model="gen", skip_empty_answers=False):
         self.next_model = next_model
+        self.skip_empty_answers = skip_empty_answers
         if remodel_file:
             with open(remodel_file, "r") as input_fp:
                 input_json = json.load(input_fp)
@@ -62,6 +63,8 @@ class ExecutionRouter(ParticipantModel):
                                                          assignments=assignment)
         if not valid_answer(answers):
             return []
+        if self.skip_empty_answers and not nonempty_answer(answers):
+            return []
         # copy state
         new_state = state.copy()
 
@@ -70,6 +73,7 @@ class ExecutionRouter(ParticipantModel):
         new_state.data["para_seq"].append("")
         new_state.data["command_seq"].append("qa")
         new_state.data["model_seq"].append(m.group(2))
+        new_state.data["operation_seq"].append(m.group(1))
         ## change output
         new_state.last_output = answers
         new_state.next = self.next_model

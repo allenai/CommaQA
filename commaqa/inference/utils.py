@@ -10,7 +10,7 @@ LIST_JOINER = " + "
 
 
 def get_sequence_representation(origq: str, question_seq: List[str], answer_seq: List[str],
-                                model_seq: List[str] = None,
+                                # model_seq: List[str] = None, operation_seq: List[str] = None,
                                 for_generation=True):
     ret_seq = COMPQ_MARKER + origq
     if for_generation and len(question_seq) != len(answer_seq):
@@ -22,8 +22,10 @@ def get_sequence_representation(origq: str, question_seq: List[str], answer_seq:
 
     for aidx in range(len(answer_seq)):
         ret_seq += INTERQ_MARKER
-        if model_seq is not None and len(model_seq):
-            ret_seq += "(" + model_seq[aidx] + ")"
+        # if operation_seq is not None and len(operation_seq):
+        #     ret_seq += "(" + model_seq[aidx] + ")"
+        # if model_seq is not None and len(model_seq):
+        #     ret_seq += "[" + model_seq[aidx] + "]"
         ret_seq += question_seq[aidx]
         ret_seq += ANSWER_MARKER + answer_seq[aidx]
 
