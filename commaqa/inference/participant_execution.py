@@ -74,6 +74,7 @@ class ExecutionParticipant(ParticipantModel):
         new_state.data["command_seq"].append("qa")
         new_state.data["model_seq"].append(m.group(2))
         new_state.data["operation_seq"].append(m.group(1))
+        new_state.data["subquestion_seq"].append(m.group(3))
         ## change output
         new_state.last_output = answers
         new_state.next = self.next_model

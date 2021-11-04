@@ -1,5 +1,12 @@
 import os
 from typing import List, Dict
+from nltk import word_tokenize
+from nltk.corpus import stopwords
+from nltk.stem.porter import PorterStemmer
+
+stemmer = PorterStemmer()
+
+stop_words_set = set(stopwords.words('english'))
 
 QUESTION_MARKER = " Q: "
 COMPQ_MARKER = " QC: "
@@ -35,6 +42,22 @@ def get_sequence_representation(origq: str, question_seq: List[str], answer_seq:
         ret_seq += SIMPQ_MARKER + question_seq[-1]
 
     return ret_seq
+
+
+def tokenize_str(input_str):
+    return word_tokenize(input_str)
+
+
+def stem_tokens(token_arr):
+    return [stemmer.stem(token) for token in token_arr]
+
+
+def filter_stop_tokens(token_arr):
+    return [token for token in token_arr if token not in stop_words_set]
+
+
+def stem_filter_tokenization(input_str):
+    return stem_tokens(filter_stop_tokens(tokenize_str(input_str.lower())))
 
 
 # functions borrowed from AllenNLP to parse JSONNET with env vars

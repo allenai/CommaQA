@@ -1,9 +1,13 @@
+import logging
+import math
 import random
 from itertools import product
 
 from commaqa.inference.model_search import ParticipantModel
-from commaqa.inference.utils import get_sequence_representation
+from commaqa.inference.utils import get_sequence_representation, stem_filter_tokenization
 from commaqa.models.generator import LMGenerator
+
+logger = logging.getLogger(__name__)
 
 
 class LMGenParticipant(ParticipantModel):
@@ -86,13 +90,14 @@ class LMGenParticipant(ParticipantModel):
 class RandomGenParticipant(ParticipantModel):
 
     def __init__(self, operations_file, model_questions_file, sample_operations, sample_questions,
-                 next_model="execute", end_state="[EOQ]"):
+                 max_steps=6, next_model="execute", end_state="[EOQ]"):
         self.operations = self.load_operations(operations_file)
         self.model_questions = self.load_model_questions(model_questions_file)
         self.sample_operations = sample_operations
         self.sample_questions = sample_questions
         self.end_state = end_state
         self.next_model = next_model
+        self.max_steps = max_steps
 
     def load_operations(self, operations_file):
         with open(operations_file, "r") as input_fp:
@@ -107,11 +112,17 @@ class RandomGenParticipant(ParticipantModel):
                 model_questions.append((fields[0], fields[1]))
         return model_questions
 
-    def sample(self, population, sample_size_or_prop):
+    def select(self, population, sample_size_or_prop, samplek=True):
         if sample_size_or_prop >= 1:
-            return random.sample(population, k=sample_size_or_prop)
+            if samplek:
+                return random.sample(population, k=sample_size_or_prop)
+            else:
+                return population[:sample_size_or_prop]
         else:
-            return random.sample(population, k=sample_size_or_prop * len(population))
+            if samplek:
+                return random.sample(population, k=math.ceil(sample_size_or_prop * len(population)))
+            else:
+                return population[:math.ceil(sample_size_or_prop * len(population))]
 
     def build_end_state(self, state):
         new_state = state.copy()
@@ -124,18 +135,33 @@ class RandomGenParticipant(ParticipantModel):
         new_state.last_output = output
         return new_state
 
+    def score_question(self, sub_question, complex_question):
+        sub_question_tokens = set(stem_filter_tokenization(sub_question))
+        if len(sub_question_tokens) == 0:
+            logger.debug("No tokens found in sub_question: {}!!".format(sub_question))
+            return 0.0
+        complex_question_tokens = set(stem_filter_tokenization(complex_question))
+        overlap = sub_question_tokens.intersection(complex_question_tokens)
+        # only penalized for sub-question length
+        return len(overlap) / len(sub_question_tokens)
+
     def query(self, state, debug=False):
         data = state.data
-        if len(data["question_seq"]) > 5:
+        if len(data["question_seq"]) > self.max_steps:
             return [self.build_end_state(state)]
-
-        ops = self.sample(self.operations, self.sample_operations)
-        model_questions = self.sample(self.model_questions, self.sample_questions)
+        origq = data["query"]
+        ops = self.select(self.operations, self.sample_operations)
+        sorted_model_questions = sorted(self.model_questions, reverse=True,
+                                        key=lambda x: self.score_question(x[1], origq))
+        model_questions = self.select(sorted_model_questions, self.sample_questions, samplek=False)
         op_model_qs_prod = product(ops, model_questions)
         ## eventual output
         new_states = []
         for (op, model_qs) in op_model_qs_prod:
             (model, question) = model_qs
+            # no point repeating the exact same question
+            if question in state.data["subquestion_seq"]:
+                continue
             # copy state
             new_state = state.copy()
             output = "({}) [{}] {}".format(op, model, question)
@@ -143,7 +169,8 @@ class RandomGenParticipant(ParticipantModel):
             ## add new question to question_seq
             new_state.data["question_seq"].append(output)
             new_state.next = self.next_model
-            new_state.data["score_seq"].append(0)
+            new_state.data["score_seq"].append(1)
+            new_state._score += 1
             new_state.data["command_seq"].append("gen")
             ## mark the last output
             new_state.last_output = output

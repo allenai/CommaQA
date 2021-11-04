@@ -21,6 +21,7 @@ class BasicDataInstance(dict):
 class QuestionGeneratorData(BasicDataInstance):
     _REQUIRED_ATTRS = set([
         "question_seq",
+        "subquestion_seq",
         "answer_seq",
         "command_seq",
         "model_seq",
