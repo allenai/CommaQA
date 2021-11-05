@@ -9,8 +9,8 @@
       "operations_file": std.extVar("lang_path") + "/operations.txt",
       "model_questions_file": std.extVar("lang_path") + "/model_questions.tsv",
       "sample_operations": 0.999,
-      "sample_questions": 20,
-      "max_steps": 4
+      "sample_questions": 5,
+      "max_steps": std.parseInt(std.extVar("max_steps"))
     },
     "execute": {
       "name": "operation_executer",
