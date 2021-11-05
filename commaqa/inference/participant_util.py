@@ -13,11 +13,7 @@ class DumpChainsParticipant(ParticipantModel):
         origq = data["query"]
         qchain = data["question_seq"]
         achain = data["answer_seq"]
-        mchain = data["model_seq"]
-        ochain = data["operation_seq"]
-        sequence = get_sequence_representation(origq=origq, question_seq=qchain, answer_seq=achain,
-                                               # model_seq=mchain, operation_seq=ochain,
-                                               for_generation=True)
+        sequence = get_sequence_representation(origq=origq, question_seq=qchain, answer_seq=achain)
         ans = achain[-1]
         with open(self.output_file, 'a') as chains_fp:
             chains_fp.write(data["qid"] + "\t" + sequence + "\t" + ans + "\n")

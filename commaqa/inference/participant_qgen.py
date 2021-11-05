@@ -1,10 +1,11 @@
 import logging
 import math
 import random
-from itertools import product
+import re
+from itertools import product, permutations
 
 from commaqa.inference.model_search import ParticipantModel
-from commaqa.inference.utils import get_sequence_representation, stem_filter_tokenization
+from commaqa.inference.utils import get_sequence_representation, stem_filter_tokenization, BLANK
 from commaqa.models.generator import LMGenerator
 
 logger = logging.getLogger(__name__)
@@ -38,13 +39,8 @@ class LMGenParticipant(ParticipantModel):
         data = state.data
         question_seq = data["question_seq"]
         answer_seq = data["answer_seq"]
-        model_seq = data["model_seq"]
-        operation_seq = data["operation_seq"]
         gen_seq = get_sequence_representation(origq=data["query"], question_seq=question_seq,
-                                              answer_seq=answer_seq,
-                                              # model_seq=model_seq,
-                                              # operation_seq=operation_seq,
-                                              for_generation=True)
+                                              answer_seq=answer_seq)
         if self.add_prefix:
             gen_seq = self.add_prefix + gen_seq
         if self.add_eos:
@@ -109,7 +105,8 @@ class RandomGenParticipant(ParticipantModel):
         with open(model_questions_file, "r") as input_fp:
             for line in input_fp:
                 fields = line.strip().split("\t")
-                model_questions.append((fields[0], fields[1]))
+                for question in fields[1:]:
+                    model_questions.append((fields[0], question))
         return model_questions
 
     def select(self, population, sample_size_or_prop, samplek=True):
@@ -145,13 +142,64 @@ class RandomGenParticipant(ParticipantModel):
         # only penalized for sub-question length
         return len(overlap) / len(sub_question_tokens)
 
+    def find_question_entities(self, origq):
+        entities = []
+        for m in re.finditer("\s([A-Z][a-z]+)", origq):
+            entities.append(m.group(1))
+
+        for m in re.finditer("([0-9\.]+)", origq):
+            entities.append(m.group(1))
+        return entities
+
+    def replace_blanks(self, blanked_str, fillers):
+        num_blanks = blanked_str.count(BLANK)
+        output_strings = []
+        if num_blanks > 0:
+            filler_permutations = permutations(fillers, num_blanks)
+            for permutation in filler_permutations:
+                new_str = blanked_str
+                for filler_val in permutation:
+                    new_str = new_str.replace(BLANK, filler_val, 1)
+                output_strings.append(new_str)
+        else:
+            output_strings = [blanked_str]
+        return output_strings
+
     def query(self, state, debug=False):
         data = state.data
-        if len(data["question_seq"]) > self.max_steps:
+        num_steps = len(data["question_seq"])
+        # push for one extra step so that all shorter chains have been explored
+        if num_steps > self.max_steps:
             return [self.build_end_state(state)]
         origq = data["query"]
-        ops = self.select(self.operations, self.sample_operations)
-        sorted_model_questions = sorted(self.model_questions, reverse=True,
+        answer_strs = []
+        if num_steps == 0:
+            # hard-coded to only consider select in the first step
+            ops = ["select"]
+        else:
+            for x in range(num_steps):
+                answer_strs.append("#" + str(x + 1))
+            operations_pool = []
+            for op in self.operations:
+                operations_pool.extend(self.replace_blanks(op, answer_strs))
+            ops = self.select(operations_pool, self.sample_operations)
+
+        question_entities = self.find_question_entities(origq)
+        # hack to only use a filler in one of the steps
+        potential_fillers = question_entities + answer_strs
+        filler_pool = []
+        for filler in potential_fillers:
+            found_match = False
+            for question in state.data["subquestion_seq"]:
+                if filler in question:
+                    found_match = True
+                    break
+            if not found_match:
+                filler_pool.append(filler)
+
+        questions_pool = [(m, newq) for (m, q) in self.model_questions
+                          for newq in self.replace_blanks(q, filler_pool)]
+        sorted_model_questions = sorted(questions_pool, reverse=True,
                                         key=lambda x: self.score_question(x[1], origq))
         model_questions = self.select(sorted_model_questions, self.sample_questions, samplek=False)
         op_model_qs_prod = product(ops, model_questions)
@@ -159,13 +207,14 @@ class RandomGenParticipant(ParticipantModel):
         new_states = []
         for (op, model_qs) in op_model_qs_prod:
             (model, question) = model_qs
+
             # no point repeating the exact same question
             if question in state.data["subquestion_seq"]:
                 continue
             # copy state
+
             new_state = state.copy()
             output = "({}) [{}] {}".format(op, model, question)
-
             ## add new question to question_seq
             new_state.data["question_seq"].append(output)
             new_state.next = self.next_model
