@@ -9,7 +9,7 @@
       "operations_file": std.extVar("lang_path") + "/operations.txt",
       "model_questions_file": std.extVar("lang_path") + "/model_questions.tsv",
       "sample_operations": 0.999,
-      "sample_questions": 5,
+      "sample_questions": std.parseInt(std.extVar("num_questions")),
       "max_steps": std.parseInt(std.extVar("max_steps"))
     },
     "execute": {
@@ -20,7 +20,7 @@
     },
     "chains": {
         "name": "dump_chains",
-        "output_file": std.extVar("output_dir") + "/chains.tsv",
+        "output_file": std.extVar("output_dir") + "/all_chains.tsv",
         "next_model": "gen"
     }
   }
