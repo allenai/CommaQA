@@ -19,7 +19,18 @@ class OperationExecuter:
             if op == "flat":
                 answers = flatten_list(answers)
             elif op == "unique":
-                answers = list(set(answers))
+                if not isinstance(answers, list):
+                    raise ValueError("SUBOP: unique can only be applied to list. "
+                                     "Input: {}".format(answers))
+                seen_objs = set()
+                output_answers = []
+                for item in answers:
+                    # handle any structure: convert to str
+                    item_str = json.dumps(item)
+                    if item_str not in seen_objs:
+                        output_answers.append(item)
+                        seen_objs.add(item_str)
+                answers = output_answers
             elif op == "keys":
                 answers = [x[0] for x in answers]
             elif op == "values":
