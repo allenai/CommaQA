@@ -29,3 +29,14 @@ bash scripts/build_decompositions.sh \
 bash scripts/build_decompositions.sh \
   output/commaqav1/explicit \
   output/commaqav1_others/explicit/decomp
+
+
+echo "Create language"
+
+for d in explicit implicit numeric;
+do
+  mkdir -p output/commaqav1_others/${d}/language
+  jq -r ".predicate_language[]|[.model, .questions[]]|@tsv" \
+    output/commaqav1/${d}/source*.json |  sed 's/$[0-9]/__/g' | sort -u >  \
+    output/commaqav1_others/${d}/language/model_questions.tsv
+done
