@@ -8,7 +8,7 @@
       "end_state": "[EOQ]",
       "operations_file": std.extVar("lang_path") + "/operations.txt",
       "model_questions_file": std.extVar("lang_path") + "/model_questions.tsv",
-      "sample_operations": 0.999,
+      "sample_operations": std.parseInt(std.extVar("sample_operations_percent")) / 100,
       "sample_questions": std.parseInt(std.extVar("num_questions")),
       "max_steps": std.parseInt(std.extVar("max_steps"))
     },
