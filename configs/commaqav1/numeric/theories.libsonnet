@@ -189,7 +189,7 @@
         answer: "#2",
       },
       {
-        operation: "filter",
+        operation: "filter(#2)",
         question: "is_smaller(#2 | $1)",
         answer: "#3",
       },
