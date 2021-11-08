@@ -10,7 +10,8 @@
       "model_questions_file": std.extVar("lang_path") + "/model_questions.tsv",
       "sample_operations": std.parseInt(std.extVar("sample_operations_percent")) / 100,
       "sample_questions": std.parseInt(std.extVar("num_questions")),
-      "max_steps": std.parseInt(std.extVar("max_steps"))
+      "max_steps": std.parseInt(std.extVar("max_steps")),
+      "topk_questions": std.extVar("topk_questions")
     },
     "execute": {
       "name": "operation_executer",

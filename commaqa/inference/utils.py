@@ -14,6 +14,7 @@ COMPQ_MARKER = " QC: "
 SIMPQ_MARKER = " QS: "
 INTERQ_MARKER = " QI: "
 ANSWER_MARKER = " A: "
+EOQ_MARKER = "[EOQ]"
 LIST_JOINER = " + "
 BLANK = "__"
 

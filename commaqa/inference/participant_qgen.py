@@ -86,7 +86,7 @@ class LMGenParticipant(ParticipantModel):
 class RandomGenParticipant(ParticipantModel):
 
     def __init__(self, operations_file, model_questions_file, sample_operations, sample_questions,
-                 max_steps=6, next_model="execute", end_state="[EOQ]"):
+                 max_steps=6, next_model="execute", topk_questions=True, end_state="[EOQ]"):
         self.operations = self.load_operations(operations_file)
         self.model_questions = self.load_model_questions(model_questions_file)
         self.sample_operations = sample_operations
@@ -94,6 +94,7 @@ class RandomGenParticipant(ParticipantModel):
         self.end_state = end_state
         self.next_model = next_model
         self.max_steps = max_steps
+        self.topk_questions = topk_questions
 
     def load_operations(self, operations_file):
         with open(operations_file, "r") as input_fp:
@@ -199,9 +200,12 @@ class RandomGenParticipant(ParticipantModel):
 
         questions_pool = [(m, newq) for (m, q) in self.model_questions
                           for newq in self.replace_blanks(q, filler_pool)]
-        sorted_model_questions = sorted(questions_pool, reverse=True,
-                                        key=lambda x: self.score_question(x[1], origq))
-        model_questions = self.select(sorted_model_questions, self.sample_questions, samplek=False)
+        if self.topk_questions:
+            sorted_model_questions = sorted(questions_pool, reverse=True,
+                                            key=lambda x: self.score_question(x[1], origq))
+            model_questions = self.select(sorted_model_questions, self.sample_questions, samplek=False)
+        else:
+            model_questions = self.select(questions_pool, self.sample_questions, samplek=True)
         op_model_qs_prod = product(ops, model_questions)
         ## eventual output
         new_states = []
