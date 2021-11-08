@@ -40,3 +40,17 @@ do
     output/commaqav1/${d}/source*.json |  sed 's/$[0-9]/__/g' | sort -u >  \
     output/commaqav1_others/${d}/language/model_questions.tsv
 done
+
+
+for f in explicit implicit numeric;
+do
+    mkdir -p output/commaqav1_others/${f}/restricted_language
+    jq -r ".[].qa_pairs[].decomposition[]|[.m, .q]|@tsv" \
+      output/commaqav1/${f}/train.json | \
+      sed 's/[$#][0-9]/__/g' | sort -u > \
+      output/commaqav1_others/${f}/restricted_language/model_questions.tsv
+  jq -r ".[].qa_pairs[].decomposition[].op" \
+    output/commaqav1/${f}/train.json | \
+    sed 's/[$#][0-9]/__/g' | sort -u > \
+    output/commaqav1_others/${f}/restricted_language/operations.txt
+done
