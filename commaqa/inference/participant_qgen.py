@@ -102,13 +102,29 @@ class RandomGenParticipant(ParticipantModel):
         return ops
 
     def load_model_questions(self, model_questions_file):
-        model_questions = []
+        model_question_list = {}
         with open(model_questions_file, "r") as input_fp:
             for line in input_fp:
                 fields = line.strip().split("\t")
+                model = fields[0]
+                if model not in model_question_list:
+                    model_question_list[model] = []
                 for question in fields[1:]:
-                    model_questions.append((fields[0], question))
-        return model_questions
+                    question_entities = self.find_question_entities(question)
+                    for q_ent in question_entities:
+                        question = question.replace(q_ent, BLANK)
+                    model_question_list[model].append(question)
+        # get unique questions
+        output_model_questions = []
+        for model_key, question_list in model_question_list.items():
+            unique_questions = list(set(question_list))
+            for q in unique_questions:
+                output_model_questions.append((model_key, q))
+                print(model_key, q)
+            logger.info("{} Questions in {} language".format(len(unique_questions),
+                                                             model_key))
+
+        return output_model_questions
 
     def select(self, population, sample_size_or_prop, samplek=True):
         if sample_size_or_prop >= 1:
@@ -145,7 +161,7 @@ class RandomGenParticipant(ParticipantModel):
 
     def find_question_entities(self, origq):
         entities = []
-        for m in re.finditer("\s([A-Z][a-z]+)", origq):
+        for m in re.finditer("\s([A-Z]\w+)", origq):
             entities.append(m.group(1))
 
         for m in re.finditer("([0-9\.]+)", origq):
@@ -203,7 +219,8 @@ class RandomGenParticipant(ParticipantModel):
         if self.topk_questions:
             sorted_model_questions = sorted(questions_pool, reverse=True,
                                             key=lambda x: self.score_question(x[1], origq))
-            model_questions = self.select(sorted_model_questions, self.sample_questions, samplek=False)
+            model_questions = self.select(sorted_model_questions, self.sample_questions,
+                                          samplek=False)
         else:
             model_questions = self.select(questions_pool, self.sample_questions, samplek=True)
         op_model_qs_prod = product(ops, model_questions)

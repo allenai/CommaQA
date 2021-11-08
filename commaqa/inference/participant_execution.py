@@ -62,10 +62,12 @@ class ExecutionParticipant(ParticipantModel):
                                                          question=m.group(3),
                                                          assignments=assignment)
         if not valid_answer(answers):
-            logger.debug("Invalid answer!", qid, question, ", ".join(data["question_seq"]))
+            logger.debug("Invalid answer for qid: {} question: {} chain: {}!".format(
+                qid, question, ", ".join(data["question_seq"])))
             return []
         if self.skip_empty_answers and not nonempty_answer(answers):
-            logger.debug("Empty answer", qid, question, ", ".join(data["question_seq"]))
+            logger.debug("Empty answer for qid: {} question: {} chain: {}!".format(
+                qid, question, ", ".join(data["question_seq"])))
             return []
 
         # copy state
