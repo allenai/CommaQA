@@ -54,3 +54,14 @@ do
     sed 's/[$#][0-9]/__/g' | sort -u > \
     output/commaqav1_others/${f}/restricted_language/operations.txt
 done
+
+mkdir -p output/commaqav1/compgen/
+python commaqa/dataset/build_dataset.py \
+  --input_json   configs/commaqav1/numeric/sports_compgen.jsonnet \
+  --output output/commaqav1/compgen/numeric_test.json --entity_percent 0.2 \
+  --num_groups 100 --num_examples_per_group 5
+
+python commaqa/dataset/build_dataset.py \
+  --input_json configs/commaqav1/explicit/movies1_compgen.jsonnet,configs/commaqav1/explicit/movies2_compgen.jsonnet \
+  --output output/commaqav1/compgen/explicit_test.json --entity_percent 0.2 \
+  --num_groups 100 --num_examples_per_group 5
