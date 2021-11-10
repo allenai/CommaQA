@@ -48,6 +48,11 @@ class ParticipantModel(object):
         """
         raise NotImplementedError("Must implement to work inside of controller!")
 
+    def return_model_calls(self):
+        """
+        :return: a dict of <model_name, number of calls> made by this participant
+        """
+        raise NotImplementedError("Must implement to work inside of controller!")
 
 class ModelController(object):
     """This class is a `ModelController` that takes multiple (arbitrary)

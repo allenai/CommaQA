@@ -19,6 +19,7 @@ LIST_JOINER = " + "
 BLANK = "__"
 WH_WORDS = set(["who", "what", "where", "how", "why", "when", "which"])
 
+
 def get_sequence_representation(origq: str, question_seq: List[str], answer_seq: List[str]):
     ret_seq = COMPQ_MARKER + origq
     if len(question_seq) != len(answer_seq):

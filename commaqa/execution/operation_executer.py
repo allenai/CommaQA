@@ -12,6 +12,7 @@ class OperationExecuter:
     def __init__(self, model_library, ignore_input_mismatch=False):
         self.model_library = model_library
         self.ignore_input_mismatch = ignore_input_mismatch
+        self.num_calls = 0
 
     def execute_sub_operations(self, answers, operation):
         operation_seq = operation.split("_")
@@ -187,6 +188,7 @@ class OperationExecuter:
         return answers, facts_used
 
     def execute_operation(self, operation, model, question, assignments):
+        self.num_calls += 1
         if model not in self.model_library:
             error_mesg = "Model: {} not found in " \
                          "model_library: {}".format(model, self.model_library.keys())

@@ -13,6 +13,7 @@ from commaqa.inference.utils import get_environment_variables
 
 logger = logging.getLogger(__name__)
 
+
 def parse_arguments():
     arg_parser = argparse.ArgumentParser(description='Convert HotPotQA dataset into SQUAD format')
     arg_parser.add_argument('--input', type=str, required=True, help="Input QA file")
@@ -108,6 +109,10 @@ if __name__ == "__main__":
             for example in reader.read_examples(args.input):
                 qid_answer_chains.append(
                     decomposer.return_qid_prediction(example, debug=args.debug))
+
+        for participant in model_map.values():
+            for model, num_calls in participant.return_model_calls().items():
+                print("Number of calls to {}: {}".format(model, num_calls))
 
         predictions = {x[0]: x[1] for x in qid_answer_chains}
         with open(args.output, "w") as output_fp:

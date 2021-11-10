@@ -21,7 +21,11 @@ class LMGenParticipant(ParticipantModel):
         self.add_prefix = add_prefix
         self.next_model = next_model
         self.end_state = end_state
+        self.num_calls = 0
         self.lmgen = LMGenerator(**kwargs)
+
+    def return_model_calls(self):
+        return {"lmgen": self.num_calls}
 
     def query(self, state, debug=False):
         """The main function that interfaces with the overall search and
@@ -53,7 +57,7 @@ class LMGenParticipant(ParticipantModel):
         new_states = []
         ## go through generated questions
         output_seq_scores = self.lmgen.generate_text_sequence(gen_seq)
-
+        self.num_calls += 1
         observed_outputs = set()
         for (output_seq, score) in output_seq_scores:
             output = output_seq.strip()
@@ -95,7 +99,11 @@ class RandomGenParticipant(ParticipantModel):
         self.end_state = end_state
         self.next_model = next_model
         self.max_steps = max_steps
+        self.num_calls = 0
         self.topk_questions = topk_questions
+
+    def return_model_calls(self):
+        return {"randomgen": self.num_calls}
 
     def load_operations(self, operations_file):
         with open(operations_file, "r") as input_fp:
@@ -228,6 +236,7 @@ class RandomGenParticipant(ParticipantModel):
         op_model_qs_prod = product(ops, model_questions)
         ## eventual output
         new_states = []
+        self.num_calls += 1
         for (op, model_qs) in op_model_qs_prod:
             (model, question) = model_qs
 

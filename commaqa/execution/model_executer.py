@@ -16,6 +16,7 @@ class ModelExecutor:
         self.model_name = model_name
         self.kblookup = kblookup
         self.ignore_input_mismatch = ignore_input_mismatch
+        self.num_calls = 0
 
     def find_qpred_assignments(self, input_question, question_definition):
         question_re = re.escape(question_definition)
@@ -35,6 +36,7 @@ class ModelExecutor:
         return None
 
     def ask_question(self, input_question):
+        self.num_calls += 1
         qpred, qargs = get_predicate_args(input_question)
         if qpred is not None:
             return self.ask_question_predicate(question_predicate=input_question)
