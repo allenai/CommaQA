@@ -6,7 +6,7 @@ from itertools import product, permutations
 
 from commaqa.inference.model_search import ParticipantModel
 from commaqa.inference.utils import get_sequence_representation, stem_filter_tokenization, BLANK, \
-    WH_WORDS
+    stop_words_set
 from commaqa.models.generator import LMGenerator
 
 logger = logging.getLogger(__name__)
@@ -171,7 +171,7 @@ class RandomGenParticipant(ParticipantModel):
     def find_question_entities(self, origq):
         entities = []
         for m in re.finditer("\\b([A-Z]\w+)", origq):
-            if m.group(1).lower() not in WH_WORDS:
+            if m.group(1).lower() not in stop_words_set:
                 entities.append(m.group(1))
 
         for m in re.finditer("([0-9\.]+)", origq):
