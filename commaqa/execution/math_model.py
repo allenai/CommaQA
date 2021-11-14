@@ -41,7 +41,7 @@ class MathModel(ModelExecutor):
                 return None
             item = item[0]
             if isinstance(item, list):
-                logger.debug("Could not parse float from list within the list" + item)
+                logger.debug("Could not parse float from list within the list: {}".format(item))
                 return None
         try:
             return float(item)
