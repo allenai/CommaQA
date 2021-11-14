@@ -39,13 +39,15 @@ class MathModel(ModelExecutor):
             if (len(item)) != 1:
                 logger.debug("List of values instead of single number in {}".format(num))
                 return None
-            return MathModel.get_number(item[0])
-        else:
-            try:
-                return float(item)
-            except ValueError:
-                logger.debug("Could not parse float from: " + item)
+            item = item[0]
+            if isinstance(item, list):
+                logger.debug("Could not parse float from list within the list" + item)
                 return None
+        try:
+            return float(item)
+        except ValueError:
+            logger.debug("Could not parse float from: " + item)
+            return None
 
     def max(self, groups):
         if len(groups) != 1:
