@@ -26,6 +26,8 @@ class MathModel(ModelExecutor):
     @staticmethod
     def get_number(num):
         # can only extract numbers from strings
+        if isinstance(num, int) or isinstance(num, float):
+            return num
         if not isinstance(num, str):
             return None
         try:
@@ -37,12 +39,13 @@ class MathModel(ModelExecutor):
             if (len(item)) != 1:
                 logger.debug("List of values instead of single number in {}".format(num))
                 return None
-            item = item[0]
-        try:
-            return float(item)
-        except ValueError:
-            logger.debug("Could not parse float from: " + item)
-            return None
+            return MathModel.get_number(item[0])
+        else:
+            try:
+                return float(item)
+            except ValueError:
+                logger.debug("Could not parse float from: " + item)
+                return None
 
     def max(self, groups):
         if len(groups) != 1:
