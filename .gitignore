@@ -2,8 +2,11 @@
 *.iml
 .idea/
 
-#Python specific
+# Python specific
 *.pyc
 
-#Output dumps
+# Output dumps
 output/
+
+# Scratch folder
+scratch/
