@@ -1,0 +1,9 @@
+# IntelliJ specific
+*.iml
+.idea/
+
+#Python specific
+*.pyc
+
+#Output dumps
+output/
