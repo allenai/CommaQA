@@ -1,7 +1,6 @@
 import json
 
 
-
 class DatasetReader:
 
     def read_examples(self, file):

@@ -1,6 +1,7 @@
 import argparse
 import json
 import logging
+import os
 
 import _jsonnet
 
@@ -12,6 +13,7 @@ from commaqa.inference.model_search import (
 from commaqa.inference.utils import get_environment_variables
 
 logger = logging.getLogger(__name__)
+
 
 def parse_arguments():
     arg_parser = argparse.ArgumentParser(description='Convert HotPotQA dataset into SQUAD format')
@@ -108,6 +110,19 @@ if __name__ == "__main__":
             for example in reader.read_examples(args.input):
                 qid_answer_chains.append(
                     decomposer.return_qid_prediction(example, debug=args.debug))
+
+        num_call_metrics = {}
+        for participant in model_map.values():
+            for model, num_calls in participant.return_model_calls().items():
+                print("Number of calls to {}: {}".format(model, num_calls))
+                num_call_metrics[model] = num_calls
+        metrics_json = {
+            "num_calls": num_call_metrics
+        }
+        metrics_file = os.path.join(os.path.dirname(args.output), "metrics.json")
+
+        with open(metrics_file, "w") as output_fp:
+            json.dump(metrics_json, output_fp)
 
         predictions = {x[0]: x[1] for x in qid_answer_chains}
         with open(args.output, "w") as output_fp:

@@ -7,7 +7,7 @@
       "model_path": std.extVar("model_path"),
       "generation_args": {
         "max_length": 40,
-        "num_return_sequences": 5,
+        "num_return_sequences": 1,
         "top_p": 0.95,
         "top_k": 10,
         "do_sample": false,

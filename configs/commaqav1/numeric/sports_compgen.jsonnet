@@ -6,7 +6,7 @@ local predicate_languages = import "predicate_language.libsonnet";
 local theories = import "theories_compgen.libsonnet";
 local predicate_names = ["table_nationj", "table_nationd", "text_dthrow", "text_jthrow"];
 local predicates = { [p]: combined_predicates[p] for p in predicate_names };
-local predicate_language = { [key]: predicate_languages[p][key] for p in predicate_names + ["math_special"] for key in std.objectFields(predicate_languages[p]) };
+local predicate_language = { [key]: predicate_languages[p][key] for p in predicate_names + ["math_predicates"] for key in std.objectFields(predicate_languages[p]) };
 {
   version: 3.0,
   entities: entities,

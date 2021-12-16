@@ -26,6 +26,8 @@ class MathModel(ModelExecutor):
     @staticmethod
     def get_number(num):
         # can only extract numbers from strings
+        if isinstance(num, int) or isinstance(num, float):
+            return num
         if not isinstance(num, str):
             return None
         try:
@@ -38,6 +40,9 @@ class MathModel(ModelExecutor):
                 logger.debug("List of values instead of single number in {}".format(num))
                 return None
             item = item[0]
+            if isinstance(item, list):
+                logger.debug("Could not parse float from list within the list: {}".format(item))
+                return None
         try:
             return float(item)
         except ValueError:

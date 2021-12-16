@@ -1,7 +1,7 @@
 import json
 import logging
 
-from commaqa.dataset.utils import flatten_list, get_answer_indices, nonempty_answer, NOANSWER, \
+from commaqa.dataset.utils import flatten_list, get_answer_indices, NOANSWER, \
     valid_answer
 
 logger = logging.getLogger(__name__)
@@ -12,6 +12,7 @@ class OperationExecuter:
     def __init__(self, model_library, ignore_input_mismatch=False):
         self.model_library = model_library
         self.ignore_input_mismatch = ignore_input_mismatch
+        self.num_calls = 0
 
     def execute_sub_operations(self, answers, operation):
         operation_seq = operation.split("_")
@@ -19,7 +20,18 @@ class OperationExecuter:
             if op == "flat":
                 answers = flatten_list(answers)
             elif op == "unique":
-                answers = list(set(answers))
+                if not isinstance(answers, list):
+                    raise ValueError("SUBOP: unique can only be applied to list. "
+                                     "Input: {}".format(answers))
+                seen_objs = set()
+                output_answers = []
+                for item in answers:
+                    # handle any structure: convert to str
+                    item_str = json.dumps(item)
+                    if item_str not in seen_objs:
+                        output_answers.append(item)
+                        seen_objs.add(item_str)
+                answers = output_answers
             elif op == "keys":
                 answers = [x[0] for x in answers]
             elif op == "values":
@@ -100,18 +112,20 @@ class OperationExecuter:
         return answers, facts_used
 
     def execute_filter(self, operation, model, question, assignments):
-        indices = get_answer_indices(question)
-        if len(indices) > 1:
-            # check which index is mentioned in the operation
-            question_indices = indices
-            indices = get_answer_indices(operation)
-            if len(indices) > 1:
-                raise NotImplementedError("Can not handle more than one answer idx for filter!"
-                                          "Operation: {} Question: {}".format(operation, question))
+        q_answer_indices = get_answer_indices(question)
+        if len(q_answer_indices) > 1:
+            # more than one answer index in the question, use the operation to identify the
+            # answer idx to operate over
+            op_answer_indices = get_answer_indices(operation)
+            if len(op_answer_indices) != 1:
+                raise ValueError("Need one answer idx to be specified in filter operation since "
+                                 "multiple specified in the question!  "
+                                 "Operation: {} Question: {}".format(operation, question))
             else:
-                for idx in question_indices:
-                    # modify question directly to include the other question indices
-                    if idx not in indices:
+                operation_idx = op_answer_indices[0]
+                for idx in q_answer_indices:
+                    if idx != operation_idx:
+                        # modify question directly to include the non-operated answer id
                         idx_str = "#" + str(idx)
                         if idx_str not in assignments:
                             raise ValueError(
@@ -119,8 +133,13 @@ class OperationExecuter:
                                 "No assignments yet!".format(idx_str))
                         # print(question, idx_str, assignments)
                         question = question.replace(idx_str, json.dumps(assignments[idx_str]))
+        elif len(q_answer_indices) == 1:
+            operation_idx = q_answer_indices[0]
+        else:
+            raise ValueError("FILTER: No answer index in question for filter"
+                             "Operation: {} Question: {}".format(operation, question))
 
-        idx_str = "#" + str(indices[0])
+        idx_str = "#" + str(operation_idx)
         if idx_str not in assignments:
             raise ValueError("FILTER: Can not perform filter operation with input arg: {}"
                              " No assignments yet!".format(idx_str))
@@ -135,18 +154,18 @@ class OperationExecuter:
         for item in assignments[idx_str]:
             if isinstance(item, list) and len(item) == 2:
                 item = tuple(item)
-            if first_op.startswith("filterKeys"):
+            if first_op.startswith("filterValues"):
                 # item should be a tuple
                 if not isinstance(item, tuple):
                     raise ValueError("FILTER: Item: {} is not a tuple in assignments: {}. "
-                                     "Expected for filterKeys".format(item, assignments[idx_str]))
+                                     "Expected for filterValues".format(item, assignments[idx_str]))
                 (key, value) = item
                 new_question = question.replace(idx_str, json.dumps(value))
-            elif first_op.startswith("filterValues"):
+            elif first_op.startswith("filterKeys"):
                 if not isinstance(item, tuple):
                     raise ValueError("FILTER: Item: {} is not a tuple in assignments: {}. "
-                                     "Expected for filterValues".format(item,
-                                                                        assignments[idx_str]))
+                                     "Expected for filterKeys".format(item,
+                                                                      assignments[idx_str]))
                 (key, value) = item
                 new_question = question.replace(idx_str, json.dumps(key))
             else:
@@ -169,6 +188,7 @@ class OperationExecuter:
         return answers, facts_used
 
     def execute_operation(self, operation, model, question, assignments):
+        self.num_calls += 1
         if model not in self.model_library:
             error_mesg = "Model: {} not found in " \
                          "model_library: {}".format(model, self.model_library.keys())

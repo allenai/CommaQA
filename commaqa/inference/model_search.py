@@ -1,11 +1,8 @@
-## generalizes version of `QuestionSearch.py` in this directory
 import copy
 import heapq
 import json
 import logging
 
-
-## THE BASIC MODEL
 
 class BasicDataInstance(dict):
     _REQUIRED_ATTRS = set([])
@@ -21,6 +18,7 @@ class BasicDataInstance(dict):
 class QuestionGeneratorData(BasicDataInstance):
     _REQUIRED_ATTRS = set([
         "question_seq",
+        "subquestion_seq",
         "answer_seq",
         "command_seq",
         "model_seq",
@@ -44,6 +42,12 @@ class ParticipantModel(object):
         :param state: the state of controller and model flow.
         :type state: launchpadqa.question_search.model_search.SearchState
         :rtype: list
+        """
+        raise NotImplementedError("Must implement to work inside of controller!")
+
+    def return_model_calls(self):
+        """
+        :return: a dict of <model_name, number of calls> made by this participant
         """
         raise NotImplementedError("Must implement to work inside of controller!")
 

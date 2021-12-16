@@ -4,5 +4,6 @@ torch==1.10.0
 # Needed for T5 models
 sentencepiece
 protobuf==3.19.0
+nltk
 # Only needed for DROP evaluation script
 scipy

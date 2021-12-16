@@ -21,7 +21,8 @@ WORKDIR /stage/
 
 COPY requirements.txt .
 RUN pip install -r requirements.txt
-
+RUN python -m nltk.downloader stopwords
+RUN python -m nltk.downloader punkt
 COPY commaqa/ commaqa/
 
 CMD ["/bin/bash"]

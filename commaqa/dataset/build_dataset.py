@@ -4,6 +4,7 @@ import logging
 import os
 import random
 from math import ceil
+from random import shuffle
 from shutil import copyfile
 from typing import List
 
@@ -172,6 +173,7 @@ if __name__ == '__main__':
         with open(args.output, "w") as output_fp:
             json.dump(data, output_fp, indent=4)
     else:
+        shuffle(data)
         train_ex = ceil(num_examples * 0.8)
         dev_ex = ceil(num_examples * 0.1)
         test_ex = num_examples - train_ex - dev_ex

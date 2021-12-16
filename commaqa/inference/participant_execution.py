@@ -15,6 +15,7 @@ class ExecutionParticipant(ParticipantModel):
     def __init__(self, remodel_file, next_model="gen", skip_empty_answers=False):
         self.next_model = next_model
         self.skip_empty_answers = skip_empty_answers
+        self.per_model_calls = {"executer": 0, "op_executer": 0}
         if remodel_file:
             with open(remodel_file, "r") as input_fp:
                 input_json = json.load(input_fp)
@@ -30,6 +31,9 @@ class ExecutionParticipant(ParticipantModel):
                     self.qid_to_kb_lang_idx[qid] = idx
             self.operation_regex = re.compile("\((.+)\) \[([^\]]+)\] (.*)")
 
+    def return_model_calls(self):
+        return self.per_model_calls
+
     def query(self, state, debug=False):
         """The main function that interfaces with the overall search and
         model controller, and manipulates the incoming data.
@@ -40,6 +44,12 @@ class ExecutionParticipant(ParticipantModel):
         """
         ## the data
         data = state._data
+        self.per_model_calls["executer"] += 1
+        step_model_key = "executer_step{}".format(len(data["question_seq"]))
+        if step_model_key not in self.per_model_calls:
+            self.per_model_calls[step_model_key] = 0
+        self.per_model_calls[step_model_key] += 1
+
         question = data["question_seq"][-1]
         qid = data["qid"]
         (kb, pred_lang) = self.kb_lang_groups[self.qid_to_kb_lang_idx[qid]]
@@ -61,10 +71,21 @@ class ExecutionParticipant(ParticipantModel):
                                                          model=m.group(2),
                                                          question=m.group(3),
                                                          assignments=assignment)
+        for model_name, model in model_lib.items():
+            if model_name not in self.per_model_calls:
+                self.per_model_calls[model_name] = 0
+            self.per_model_calls[model_name] += model.num_calls
+
+        self.per_model_calls["op_executer"] += executer.num_calls
         if not valid_answer(answers):
+            logger.debug("Invalid answer for qid: {} question: {} chain: {}!".format(
+                qid, question, ", ".join(data["question_seq"])))
             return []
         if self.skip_empty_answers and not nonempty_answer(answers):
+            logger.debug("Empty answer for qid: {} question: {} chain: {}!".format(
+                qid, question, ", ".join(data["question_seq"])))
             return []
+
         # copy state
         new_state = state.copy()
 
@@ -74,6 +95,7 @@ class ExecutionParticipant(ParticipantModel):
         new_state.data["command_seq"].append("qa")
         new_state.data["model_seq"].append(m.group(2))
         new_state.data["operation_seq"].append(m.group(1))
+        new_state.data["subquestion_seq"].append(m.group(3))
         ## change output
         new_state.last_output = answers
         new_state.next = self.next_model
