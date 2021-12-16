@@ -24,5 +24,3 @@ def build_models(pred_lang_config, complete_kb, ignore_input_mismatch=False):
                                   ignore_input_mismatch=ignore_input_mismatch)
         model_library[model_name] = model
     return model_library
-
-

@@ -1,8 +1,8 @@
 import json
 import logging
 
-from commaqa.dataset.utils import flatten_list, get_answer_indices, nonempty_answer, NOANSWER, \
-    valid_answer, get_question_indices
+from commaqa.dataset.utils import flatten_list, get_answer_indices, NOANSWER, \
+    valid_answer
 
 logger = logging.getLogger(__name__)
 
@@ -165,7 +165,7 @@ class OperationExecuter:
                 if not isinstance(item, tuple):
                     raise ValueError("FILTER: Item: {} is not a tuple in assignments: {}. "
                                      "Expected for filterKeys".format(item,
-                                                                        assignments[idx_str]))
+                                                                      assignments[idx_str]))
                 (key, value) = item
                 new_question = question.replace(idx_str, json.dumps(key))
             else:
