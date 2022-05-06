@@ -10,3 +10,6 @@ output/
 
 # Scratch folder
 scratch/
+
+# Wandb
+wandb/
