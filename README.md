@@ -95,7 +95,10 @@ to files:
 
 
 ## Code
-To build your own version of the dataset, use the script `scripts/build_commaqav1.sh`. It will
-generate the dataset in `output/commaqav1` folder using the configs from `configs/commaqav1`.
-Note that this is will be a different sample of the synthetic dataset and won't be exactly same as
-the dataset used in our paper. Use the dataset links provided above to get the exact same dataset.
+
+Refer to the individual READMEs in each package for instructions on:
+
+  * [Config Format](commaqa/configs/README.md)
+  * [Building Datasets](commaqa/dataset/README.md)
+  * [Building Agents/Operations](commaqa/execution/README.md)
+  * [Running Inference](commaqa/inference/README.md)
