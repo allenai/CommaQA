@@ -1,6 +1,6 @@
 # Building Datasets
 
-### Building QA Dataset
+## Building QA Dataset
 To build the CommaQA dataset, you can use the script [build_commaqav1](../../scripts/build_commaqav1.sh)
 script. It will generate the dataset in `output/commaqav1` folder using the configs from
 `configs/commaqav1` directory. Note that this is will be a different sample of the synthetic
@@ -19,7 +19,7 @@ sh scripts/build_datasets.sh \
 The script will generate JSON files in CommaQA format with train/dev/test splits in the output
 directory.
 
-### Generating Decompositions
+## Generating Decompositions
 To produce the decompositions for any generated dataset in CommaQA format, you can use the
 [build_decompositions](../../scripts/build_decompositions.sh) script. e.g.
 ```shell

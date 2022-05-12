@@ -1,7 +1,7 @@
 # Running Inference
 There are two modes of inference as described in our paper.
 
-### Greedy Search
+## Greedy Search
 Greedy Search selects the most likely question decomposition at each step rather than considering
 multiple decomposition strategies. This is much faster than beam search but can not recover from any
 failures, e.g. if the most likely decomposition at a given step asks a question to the textqa agent
@@ -19,7 +19,7 @@ python commaqa/inference/configurable_inference.py \
    --output predictions.json
 ```
 
-### Beam Search
+## Beam Search
 Since our dataset (and other tasks in general) don't always have a pre-determined strategy to answer
 a question, we may need to consider multiple question decompositions at each step and then select
 the ones that do succeed. We use beam search to consider mutliple decompositions at each step. To
