@@ -23,7 +23,7 @@ python commaqa/inference/configurable_inference.py \
 ## Beam Search
 Since our dataset (and other tasks in general) don't always have a pre-determined strategy to answer
 a question, we may need to consider multiple question decompositions at each step and then select
-the ones that do succeed. We use beam search to consider mutliple decompositions at each step. To
+the ones that do succeed. We use beam search to consider multiple decompositions at each step. To
 run inference in this mode, use:
 
 ```shell
@@ -40,7 +40,7 @@ python commaqa/inference/configurable_inference.py \
 
 ## Inference using provided dataset and models
 For example, to run inference on CommaQA-E using the provided [datasets](../../README.md#Dataset)
-and [models]((../../README.md#Models),
+and [models](../../README.md#Models),
 1. Unzip the dataset `commaqa_explicit.zip` into `commaqa_explicit`
 2. Unzip the model `commaqa_e_oracle_model.zip` into `commaqa_explicit_oracle_model`
 3. Call inference:
