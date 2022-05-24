@@ -19,6 +19,7 @@ python commaqa/inference/configurable_inference.py \
    --output predictions.json
 ```
 
+
 ## Beam Search
 Since our dataset (and other tasks in general) don't always have a pre-determined strategy to answer
 a question, we may need to consider multiple question decompositions at each step and then select
@@ -35,3 +36,24 @@ python commaqa/inference/configurable_inference.py \
   --reader drop \
    --output predictions.json
 ```
+
+
+## Inference using provided dataset and models
+For example, to run inference on CommaQA-E using the provided [datasets](../../README.md#Dataset)
+and [models]((../../README.md#Models),
+1. Unzip the dataset `commaqa_explicit.zip` into `commaqa_explicit`
+2. Unzip the model `commaqa_e_oracle_model.zip` into `commaqa_explicit_oracle_model`
+3. Call inference:
+```shell
+model_path=commaqa_explicit_oracle_model/ \
+remodel_path=commaqa_explicit/commaqa/ \
+filename=test.json \
+python commaqa/inference/configurable_inference.py \
+  --input commaqa_explicit/drop/${filename} \
+  --config configs/inference/commaqav1_beam_search.jsonnet \
+  --reader drop \
+   --output predictions.json
+```
+
+You can change the dataset and model paths to run inference on a different split. You can run greedy
+inference by changing the config file to `commaqav1_greedy_search.jsonnet`.
