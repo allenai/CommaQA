@@ -25,6 +25,7 @@ Table of Contents
 * [Dataset](#Dataset)
     * [Download](#Download)
     * [Formats](#Formats)
+* [Models](#Models)
 * [Code](#Code)
 
 ## Dataset
@@ -93,6 +94,13 @@ to files:
   * `model_questions.tsv`: A TSV file where the first field corresponds to the model name and all
   the subsequent fields contain valid questions that can be asked to this model.
 
+## Models
+We also provide the T5-Large models trained to produce the next sub-question based on the oracle
+decompositions. These models can be used to perform inference as described
+[here]((commaqa/inference/README.md) to reproduce the TMN results.
+  * [CommaQA-E Model](https://ai2-public-datasets.s3.amazonaws.com/commaqa/v1/oracle_tmns/commaqa_e_oracle_model.zip)
+  * [CommaQA-I Model](https://ai2-public-datasets.s3.amazonaws.com/commaqa/v1/oracle_tmns/commaqa_i_oracle_model.zip)
+  * [CommaQA-N Model](https://ai2-public-datasets.s3.amazonaws.com/commaqa/v1/oracle_tmns/commaqa_n_oracle_model.zip)
 
 ## Code
 
